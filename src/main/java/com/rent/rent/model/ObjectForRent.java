@@ -1,15 +1,16 @@
 package com.rent.rent.model;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
-@Getter
-@Setter
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ObjectForRent {
 
     @Id
@@ -18,10 +19,11 @@ public class ObjectForRent {
 
     private String name;
 
-    private BigDecimal unitPrice;
+    private BigDecimal unitPricePerDay;
 
     private Double surface;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @ManyToOne
