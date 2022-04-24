@@ -7,17 +7,26 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
-    @Query("select r from Reservation r " +
+//    @Query("select r from Reservation r " +
+//            "left join r.objectForRent objectForRent " +
+//            "where objectForRent = ?1 " +
+//            "and r.start <= ?3 and r.end >= ?2")
+//    List<Reservation> findByObjectForRentAndBetweenDates(ObjectForRent objectForRent, LocalDate start, LocalDate end);
+
+    @Query("select case when count(r) > 0 then true else false end from Reservation r " +
             "left join r.objectForRent objectForRent " +
             "where objectForRent = ?1 " +
-//            "and (r.start between ?2 and ?3 or r.end between ?2 and ?3)")
-            "and r.start < ?3 and r.end > ?2")
-    List<Reservation> findByObjectForRentAndBetweenDates(ObjectForRent objectForRent, LocalDate start, LocalDate end);
+            "and r.start <= ?3 and r.end >= ?2")
+    boolean existsByObjectForRentAndBetweenDates(ObjectForRent objectForRent, LocalDate start, LocalDate end);
 
-    List<Reservation> findByObjectForRentId(Long objectForRentId);
+    @Query("select case when count(r) > 0 then true else false end from Reservation r " +
+            "left join r.objectForRent objectForRent " +
+            "where r.id <> ?4 " +
+            "and objectForRent = ?1 " +
+            "and r.start <= ?3 and r.end >= ?2")
+    boolean existsByObjectForRentAndBetweenDatesAndNotEqualId(ObjectForRent objectForRent, LocalDate start, LocalDate end, Long reservationId);
 }

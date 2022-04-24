@@ -4,10 +4,7 @@ import com.rent.rent.model.dto.ReservationDto;
 import com.rent.rent.service.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/reservation")
@@ -19,5 +16,10 @@ public class ReservationController {
     @PostMapping
     public ResponseEntity<ReservationDto> createReservation(@RequestBody ReservationService.CreateReservation createReservation) {
         return ResponseEntity.ok(reservationService.createReservation(createReservation));
+    }
+
+    @PutMapping
+    public ResponseEntity<ReservationDto> updateReservation(@RequestBody ReservationDto reservationDto) {
+        return ResponseEntity.ok(reservationService.updateReservation(reservationDto));
     }
 }

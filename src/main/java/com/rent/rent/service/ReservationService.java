@@ -1,6 +1,8 @@
 package com.rent.rent.service;
 
-import com.rent.rent.mapper.MapStructMapper;
+import com.rent.rent.commons.exceptions.BadRequestException;
+import com.rent.rent.commons.exceptions.ReservationConflictException;
+import com.rent.rent.mapper.MapStructMapperImpl;
 import com.rent.rent.model.ObjectForRent;
 import com.rent.rent.model.Reservation;
 import com.rent.rent.model.Tenant;
@@ -10,14 +12,13 @@ import com.rent.rent.repository.ReservationRepository;
 import com.rent.rent.repository.TenantRepository;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 @Service
 public class ReservationService {
@@ -32,7 +33,7 @@ public class ReservationService {
     private ReservationRepository reservationRepository;
 
     @Autowired
-    private MapStructMapper mapper;
+    private MapStructMapperImpl mapper;
 
     public ReservationDto createReservation(CreateReservation createReservation) {
         Tenant tenant = tenantRepository.findById(createReservation.getTenantId()).orElse(null);
@@ -40,26 +41,27 @@ public class ReservationService {
         LocalDate start = createReservation.getStart();
         LocalDate end = createReservation.getEnd();
 
-        if (tenant != null && objectForRent != null && start != null && end != null) {
+        if (Stream.of(tenant, start, end).anyMatch(Objects::nonNull) && objectForRent != null) {
+            ifReservationAlreadyExistsThrowException(objectForRent, start, end, null);
 
-            List<Reservation> reservationList = reservationRepository.findByObjectForRentAndBetweenDates(objectForRent, start, end);
+            Reservation reservation = Reservation.builder()
+                    .start(start)
+                    .end(end)
+                    .tenant(tenant)
+                    .objectForRent(objectForRent)
+                    .cost(calcReservationCost(objectForRent, start, end))
+                    .build();
 
-            if (!reservationList.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "A reservation for " + objectForRent.getName() + " already exists at that time");
-            } else {
-                Reservation reservation = Reservation.builder()
-                        .start(start)
-                        .end(end)
-                        .tenant(tenant)
-                        .objectForRent(objectForRent)
-                        .cost(objectForRent.getUnitPricePerDay().multiply(BigDecimal.valueOf(Period.between(start, end).getDays())))
-                        .build();
-                reservationRepository.save(reservation);
-                return mapper.reservationToReservationDto(reservation);
-            }
+            reservationRepository.save(reservation);
+
+            return mapper.reservationToReservationDto(reservation);
         } else {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Wrong data");
+            throw new BadRequestException();
         }
+    }
+
+    private BigDecimal calcReservationCost(ObjectForRent objectForRent, LocalDate start, LocalDate end) {
+        return objectForRent.getUnitPricePerDay().multiply(BigDecimal.valueOf(Period.between(start, end).getDays()));
     }
 
     @Data
@@ -68,5 +70,36 @@ public class ReservationService {
         LocalDate end;
         Long tenantId;
         Long objectForRentId;
+    }
+
+    private void ifReservationAlreadyExistsThrowException(ObjectForRent objectForRent, LocalDate start, LocalDate end, Long reservationId) {
+        if (reservationId == null ? reservationRepository.existsByObjectForRentAndBetweenDates(objectForRent, start, end) :
+                reservationRepository.existsByObjectForRentAndBetweenDatesAndNotEqualId(objectForRent, start, end, reservationId)) {
+            throw new ReservationConflictException(objectForRent.getName());
+        }
+    }
+
+    public ReservationDto updateReservation(ReservationDto reservationDto) {
+        Reservation reservation = reservationRepository.findById(reservationDto.getId()).orElse(null);
+        ObjectForRent objectForRent = objectForRentRepository.findById(reservationDto.getObjectForRent().getId()).orElse(null);
+        Tenant tenant = tenantRepository.findById(reservationDto.getTenant().getId()).orElse(null);
+        LocalDate start = reservationDto.getStart();
+        LocalDate end = reservationDto.getEnd();
+
+        if (reservation != null && objectForRent != null && tenant != null && start != null && end != null) {
+            ifReservationAlreadyExistsThrowException(objectForRent, start, end, reservation.getId());
+
+            reservation.setStart(start);
+            reservation.setEnd(end);
+            reservation.setTenant(tenant);
+            reservation.setObjectForRent(objectForRent);
+            reservation.setCost(calcReservationCost(objectForRent, start, end));
+
+            reservationRepository.save(reservation);
+
+            return mapper.reservationToReservationDto(reservation);
+        } else {
+            throw new BadRequestException();
+        }
     }
 }
