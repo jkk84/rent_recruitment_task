@@ -10,14 +10,16 @@ import com.rent.rent.model.dto.ReservationDto;
 import com.rent.rent.repository.ObjectForRentRepository;
 import com.rent.rent.repository.ReservationRepository;
 import com.rent.rent.repository.TenantRepository;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -62,7 +64,7 @@ public class ReservationService {
         }
     }
 
-    private BigDecimal calcReservationCost(BigDecimal unitPricePerDay, LocalDate start, LocalDate end) {
+    public BigDecimal calcReservationCost(BigDecimal unitPricePerDay, LocalDate start, LocalDate end) {
         return unitPricePerDay.multiply(BigDecimal.valueOf(Period.between(start, end).getDays() + 1));
     }
 
@@ -74,7 +76,7 @@ public class ReservationService {
         Long objectForRentId;
     }
 
-    private void ifReservationAlreadyExistsThrowException(ObjectForRent objectForRent, LocalDate start, LocalDate end, Long reservationId) {
+    public void ifReservationAlreadyExistsThrowException(ObjectForRent objectForRent, LocalDate start, LocalDate end, Long reservationId) {
         if (reservationId == null ? reservationRepository.existsByObjectForRentAndBetweenDates(objectForRent, start, end) :
                 reservationRepository.existsByObjectForRentAndBetweenDatesAndNotEqualId(objectForRent, start, end, reservationId)) {
             throw new ReservationConflictException(objectForRent.getName());
