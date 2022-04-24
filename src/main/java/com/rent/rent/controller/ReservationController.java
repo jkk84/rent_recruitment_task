@@ -6,8 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/reservation")
+@RequestMapping("/api/reservation")
 public class ReservationController {
 
     @Autowired
@@ -21,5 +23,15 @@ public class ReservationController {
     @PutMapping
     public ResponseEntity<ReservationDto> updateReservation(@RequestBody ReservationDto reservationDto) {
         return ResponseEntity.ok(reservationService.updateReservation(reservationDto));
+    }
+
+    @GetMapping("/tenant/{id}")
+    public ResponseEntity<List<ReservationDto>> getAllByTenantId(@PathVariable Long id) {
+        return ResponseEntity.ok(reservationService.getAllByTenant(id));
+    }
+
+    @GetMapping("/object-for-rent/{id}")
+    public ResponseEntity<List<ReservationDto>> getAllByObjectForRentId(@PathVariable Long id) {
+        return ResponseEntity.ok(reservationService.getAllByObjectForRentId(id));
     }
 }

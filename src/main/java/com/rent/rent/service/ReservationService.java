@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -98,6 +100,24 @@ public class ReservationService {
             reservationRepository.save(reservation);
 
             return mapper.reservationToReservationDto(reservation);
+        } else {
+            throw new BadRequestException();
+        }
+    }
+
+    public List<ReservationDto> getAllByTenant(Long tenantId) {
+        Tenant tenant = tenantRepository.findById(tenantId).orElse(null);
+        if (tenant != null) {
+            return mapper.reservationsToReservationDtos(reservationRepository.getAllByTenantOrderByStartAsc(tenant));
+        } else {
+            throw new BadRequestException();
+        }
+    }
+
+    public List<ReservationDto> getAllByObjectForRentId(Long objectForRentId) {
+        ObjectForRent objectForRent = objectForRentRepository.findById(objectForRentId).orElse(null);
+        if (objectForRent != null) {
+            return mapper.reservationsToReservationDtos(reservationRepository.getAllByObjectForRentOrderByStartAsc(objectForRent));
         } else {
             throw new BadRequestException();
         }
