@@ -39,12 +39,12 @@ public class Loader implements CommandLineRunner {
     @Autowired
     LandlordRepository landlordRepository;
 
-    @Value("${dev.h2.create.data.enabled:false}")
-    private boolean isDevH2CreateDataEnabled;
+    @Value("${dev.h2.create.random.data.enabled:false}")
+    private boolean devH2CreateRandomDataEnabled;
 
     @Override
     public void run(String... args) {
-        if (isDevH2CreateDataEnabled) {
+        if (devH2CreateRandomDataEnabled) {
 
             final int LANDLORD_COUNT = 10;
             final int TENANT_COUNT = 30;

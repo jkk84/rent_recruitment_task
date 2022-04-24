@@ -1,6 +1,6 @@
 package com.rent.rent.service;
 
-import com.rent.rent.mapper.ReservationMapper;
+import com.rent.rent.mapper.MapStructMapper;
 import com.rent.rent.model.ObjectForRent;
 import com.rent.rent.model.Reservation;
 import com.rent.rent.model.Tenant;
@@ -23,14 +23,16 @@ import java.util.List;
 public class ReservationService {
 
     @Autowired
-    TenantRepository tenantRepository;
+    private TenantRepository tenantRepository;
 
     @Autowired
-    ObjectForRentRepository objectForRentRepository;
+    private ObjectForRentRepository objectForRentRepository;
 
     @Autowired
-    ReservationRepository reservationRepository;
+    private ReservationRepository reservationRepository;
 
+    @Autowired
+    private MapStructMapper mapper;
 
     public ReservationDto createReservation(CreateReservation createReservation) {
         Tenant tenant = tenantRepository.findById(createReservation.getTenantId()).orElse(null);
@@ -53,7 +55,7 @@ public class ReservationService {
                         .cost(objectForRent.getUnitPricePerDay().multiply(BigDecimal.valueOf(Period.between(start, end).getDays())))
                         .build();
                 reservationRepository.save(reservation);
-                return ReservationMapper.INSTANCE.reservationToDto(reservation);
+                return mapper.reservationToReservationDto(reservation);
             }
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Wrong data");
