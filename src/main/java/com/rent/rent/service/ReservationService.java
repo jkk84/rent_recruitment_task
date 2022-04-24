@@ -51,7 +51,7 @@ public class ReservationService {
                     .end(end)
                     .tenant(tenant)
                     .objectForRent(objectForRent)
-                    .cost(calcReservationCost(objectForRent, start, end))
+                    .cost(calcReservationCost(objectForRent.getUnitPricePerDay(), start, end))
                     .build();
 
             reservationRepository.save(reservation);
@@ -62,8 +62,8 @@ public class ReservationService {
         }
     }
 
-    private BigDecimal calcReservationCost(ObjectForRent objectForRent, LocalDate start, LocalDate end) {
-        return objectForRent.getUnitPricePerDay().multiply(BigDecimal.valueOf(Period.between(start, end).getDays()));
+    private BigDecimal calcReservationCost(BigDecimal unitPricePerDay, LocalDate start, LocalDate end) {
+        return unitPricePerDay.multiply(BigDecimal.valueOf(Period.between(start, end).getDays() + 1));
     }
 
     @Data
@@ -95,7 +95,7 @@ public class ReservationService {
             reservation.setEnd(end);
             reservation.setTenant(tenant);
             reservation.setObjectForRent(objectForRent);
-            reservation.setCost(calcReservationCost(objectForRent, start, end));
+            reservation.setCost(calcReservationCost(objectForRent.getUnitPricePerDay(), start, end));
 
             reservationRepository.save(reservation);
 
